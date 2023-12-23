@@ -201,7 +201,8 @@ extension Home {
                 timerDate: $state.timerDate,
                 isLooping: $state.isLooping,
                 lastLoopDate: $state.lastLoopDate,
-                manualTempBasal: $state.manualTempBasal
+                manualTempBasal: $state.manualTempBasal,
+                loopStatusStyle: $state.loopStatusStyle
             )
             .onTapGesture {
                 state.isStatusPopupPresented = true
@@ -419,11 +420,6 @@ extension Home {
                     Spacer()
 
                     Group {
-                        Circle().fill(Color.loopGreen).frame(width: 8, height: 8)
-                        Text("BG")
-                            .font(.system(size: 12, weight: .bold)).foregroundColor(.loopGreen)
-                    }
-                    Group {
                         Circle().fill(Color.insulin).frame(width: 8, height: 8)
                             .padding(.leading, 8)
                         Text("IOB")
@@ -435,9 +431,18 @@ extension Home {
                         Text("ZT")
                             .font(.system(size: 12, weight: .bold)).foregroundColor(.zt)
                     }
+
+                    if state.loopStatusStyle == .circle {
+                        Spacer()
+                        loopView
+                            .frame(alignment: .center)
+                            .padding(.top, 16)
+                        Spacer()
+                    }
+
                     Group {
                         Circle().fill(Color.loopYellow).frame(width: 8, height: 8)
-                            .padding(.leading, 8)
+                            .padding(.leading, state.loopStatusStyle == .circle ? 0 : 8)
                         Text("COB")
                             .font(.system(size: 12, weight: .bold)).foregroundColor(.loopYellow)
                     }
@@ -658,9 +663,11 @@ extension Home {
 
             GeometryReader { geo in
                 VStack(spacing: 0) {
-                    loopView.padding(.horizontal, 10)
+                    if state.loopStatusStyle == .bar {
+                        loopView.padding(.horizontal, 10)
 
-                    Spacer()
+                        Spacer()
+                    }
 
                     ZStack(alignment: .bottomTrailing) {
                         glucoseView
@@ -726,7 +733,11 @@ extension Home {
             .navigationTitle("Home")
             .navigationBarHidden(true)
             .ignoresSafeArea(.keyboard)
-            .popup(isPresented: state.isStatusPopupPresented, alignment: .top, direction: .top) {
+            .popup(
+                isPresented: state.isStatusPopupPresented,
+                alignment: .top,
+                direction: .top
+            ) {
                 popup
                     .padding()
                     .background(

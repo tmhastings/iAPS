@@ -64,6 +64,7 @@ extension Home {
         @Published var totalBolus: Decimal = 0
         @Published var isStatusPopupPresented: Bool = false
         @Published var tins: Bool = false
+        @Published var loopStatusStyle: LoopStatusStyle = .bar
 
         let coredataContext = CoreDataStack.shared.persistentContainer.viewContext
 
@@ -103,6 +104,7 @@ extension Home {
             displayYgridLines = settingsManager.settings.yGridLines
             thresholdLines = settingsManager.settings.rulerMarks
             tins = settingsManager.settings.tins
+            loopStatusStyle = settingsManager.settings.loopStatusStyle
 
             broadcaster.register(GlucoseObserver.self, observer: self)
             broadcaster.register(SuggestionObserver.self, observer: self)
@@ -458,6 +460,7 @@ extension Home.StateModel:
         displayYgridLines = settingsManager.settings.yGridLines
         thresholdLines = settingsManager.settings.rulerMarks
         tins = settingsManager.settings.tins
+        loopStatusStyle = settingsManager.settings.loopStatusStyle
 
         setupGlucose()
     }

@@ -53,6 +53,7 @@ struct FreeAPSSettings: JSON, Equatable {
     var displayPredictions: Bool = true
     var useLiveActivity: Bool = false
     var historyLayout: HistoryLayout = .twoTabs
+    var loopStatusStyle: LoopStatusStyle = .bar
 }
 
 extension FreeAPSSettings: Decodable {
@@ -272,6 +273,10 @@ extension FreeAPSSettings: Decodable {
 
         if let historyLayout = try? container.decode(HistoryLayout.self, forKey: .historyLayout) {
             settings.historyLayout = historyLayout
+        }
+
+        if let loopStatusStyle = try? container.decode(LoopStatusStyle.self, forKey: .loopStatusStyle) {
+            settings.loopStatusStyle = loopStatusStyle
         }
 
         self = settings

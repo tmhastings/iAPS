@@ -32,6 +32,14 @@ extension StatConfig {
                     Toggle("Display Chart Threshold lines for Low and High", isOn: $state.rulerMarks)
                     Toggle("Standing / Laying TIR Chart", isOn: $state.oneDimensionalGraph)
                     Toggle("Enable total insulin in scope", isOn: $state.tins)
+                    Picker(
+                        selection: $state.loopStatusStyle,
+                        label: Text("Loop Status Style")
+                    ) {
+                        ForEach(LoopStatusStyle.allCases) { selection in
+                            Text(selection.displayName).tag(selection)
+                        }
+                    }
                 } header: { Text("Home Chart settings ") }
 
                 Section {

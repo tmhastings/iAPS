@@ -49,4 +49,5 @@
   "fattyMeals": false,
   "fattyMealFactor": 0.7
   "historyLayout": "twoTabs"
+  "loopStatusStyle": "bar"
 }

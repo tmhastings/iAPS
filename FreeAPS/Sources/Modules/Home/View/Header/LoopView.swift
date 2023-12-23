@@ -14,6 +14,7 @@ struct LoopView: View {
     @Binding var isLooping: Bool
     @Binding var lastLoopDate: Date
     @Binding var manualTempBasal: Bool
+    @Binding var loopStatusStyle: LoopStatusStyle
 
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -46,39 +47,42 @@ struct LoopView: View {
     }
 
     var body: some View {
-        if isLooping {
-            loopStatusBar("")
-        } else if manualTempBasal {
-            loopStatusBar("Manual")
-        } else if actualSuggestion?.timestamp != nil {
-            loopStatusBar(timeString)
-        } else if closedLoop {
-            loopStatusBar("--")
-        } else {
-            loopStatusBar("--")
-        }
+        if loopStatusStyle == .bar {
+            if isLooping {
+                loopStatusBar("")
+            } else if manualTempBasal {
+                loopStatusBar("Manual")
+            } else if actualSuggestion?.timestamp != nil {
+                loopStatusBar(timeString)
+            } else if closedLoop {
+                loopStatusBar("--")
+            } else {
+                loopStatusBar("--")
+            }
 
-//        HStack(alignment: .center) {
-//            ZStack {
-//                Circle()
-//                    .strokeBorder(color, lineWidth: 2)
-//                    .frame(width: rect.width, height: rect.height, alignment: .center)
-//                    .mask(mask(in: rect).fill(style: FillStyle(eoFill: true)))
-//                if isLooping {
-//                    ProgressView()
-//                }
-//            }
-//            if isLooping {
-//                Text("looping").font(.caption2)
-//            } else if manualTempBasal {
-//                Text("Manual").font(.caption2)
-//            } else if actualSuggestion?.timestamp != nil {
-//                Text(timeString).font(.caption2)
-//                    .foregroundColor(.secondary)
-//            } else {
-//                Text("--").font(.caption2).foregroundColor(.secondary)
-//            }
-//        }
+        } else {
+            VStack(alignment: .center) {
+                ZStack {
+                    Circle()
+                        .strokeBorder(color, lineWidth: 3)
+                        .frame(width: rect.width, height: rect.height, alignment: .center)
+                        .mask(mask(in: rect).fill(style: FillStyle(eoFill: true)))
+                    if isLooping {
+                        ProgressView()
+                    }
+                }
+                if isLooping {
+                    Text("looping").font(.caption2)
+                } else if manualTempBasal {
+                    Text("Manual").font(.caption2)
+                } else if actualSuggestion?.timestamp != nil {
+                    Text(timeString).font(.caption2)
+                        .foregroundColor(.secondary)
+                } else {
+                    Text("--").font(.caption2).foregroundColor(.secondary)
+                }
+            }
+        }
     }
 
     private var timeString: String {
