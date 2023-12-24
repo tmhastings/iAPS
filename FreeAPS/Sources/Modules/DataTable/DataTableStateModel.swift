@@ -20,9 +20,8 @@ extension DataTable {
         @Published var externalInsulinAmount: Decimal = 0
         @Published var externalInsulinDate = Date()
         @Published var historyLayout: HistoryLayout = .twoTabs
-        
+
         var units: GlucoseUnits = .mmolL
-        
 
         override func subscribe() {
             units = settingsManager.settings.units
