@@ -61,27 +61,28 @@ struct LoopView: View {
             }
 
         } else {
-            VStack(alignment: .center) {
+            HStack(alignment: .center) {
+                if isLooping {
+                    Text("looping")
+                } else if manualTempBasal {
+                    Text("Manual")
+                } else if actualSuggestion?.timestamp != nil {
+                    Text(timeString)
+                } else {
+                    Text("--")
+                }
                 ZStack {
-                    Circle()
-                        .strokeBorder(color, lineWidth: 3)
-                        .frame(width: rect.width, height: rect.height, alignment: .center)
+                    Image(systemName: "circle")
+                        .fontWeight(.black)
                         .mask(mask(in: rect).fill(style: FillStyle(eoFill: true)))
                     if isLooping {
                         ProgressView()
                     }
                 }
-                if isLooping {
-                    Text("looping").font(.caption2)
-                } else if manualTempBasal {
-                    Text("Manual").font(.caption2)
-                } else if actualSuggestion?.timestamp != nil {
-                    Text(timeString).font(.caption2)
-                        .foregroundColor(.secondary)
-                } else {
-                    Text("--").font(.caption2).foregroundColor(.secondary)
-                }
             }
+            .strikethrough(!closedLoop || manualTempBasal, pattern: .solid, color: color)
+            .font(.system(size: 12, weight: .bold))
+            .foregroundColor(color)
         }
     }
 
@@ -95,13 +96,13 @@ struct LoopView: View {
 
     private var color: Color {
         guard actualSuggestion?.timestamp != nil else {
-            return .loopGray
+            return .secondary
         }
         guard manualTempBasal == false else {
             return .loopManualTemp
         }
         guard closedLoop == true else {
-            return .loopGray
+            return .secondary
         }
 
         let delta = timerDate.timeIntervalSince(lastLoopDate) - Config.lag
@@ -121,7 +122,7 @@ struct LoopView: View {
     func mask(in rect: CGRect) -> Path {
         var path = Rectangle().path(in: rect)
         if !closedLoop || manualTempBasal {
-            path.addPath(Rectangle().path(in: CGRect(x: rect.minX, y: rect.midY - 5, width: rect.width, height: 10)))
+            path.addPath(Rectangle().path(in: CGRect(x: rect.minX, y: rect.midY - 4, width: rect.width, height: 5)))
         }
         return path
     }

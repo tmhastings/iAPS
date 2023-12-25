@@ -53,7 +53,7 @@ struct FreeAPSSettings: JSON, Equatable {
     var displayPredictions: Bool = true
     var useLiveActivity: Bool = false
     var historyLayout: HistoryLayout = .twoTabs
-    var loopStatusStyle: LoopStatusStyle = .bar
+    var loopStatusStyle: LoopStatusStyle = .circle
 }
 
 extension FreeAPSSettings: Decodable {

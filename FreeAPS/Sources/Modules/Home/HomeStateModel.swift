@@ -64,7 +64,7 @@ extension Home {
         @Published var totalBolus: Decimal = 0
         @Published var isStatusPopupPresented: Bool = false
         @Published var tins: Bool = false
-        @Published var loopStatusStyle: LoopStatusStyle = .bar
+        @Published var loopStatusStyle: LoopStatusStyle = .circle
 
         let coredataContext = CoreDataStack.shared.persistentContainer.viewContext
 

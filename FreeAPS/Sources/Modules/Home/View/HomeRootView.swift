@@ -420,6 +420,12 @@ extension Home {
                     Spacer()
 
                     Group {
+                        Circle().fill(Color.loopGreen).frame(width: 8, height: 8)
+                            .padding(.leading, 8)
+                        Text("BG")
+                            .font(.system(size: 12, weight: .bold)).foregroundColor(.loopGreen)
+                    }
+                    Group {
                         Circle().fill(Color.insulin).frame(width: 8, height: 8)
                             .padding(.leading, 8)
                         Text("IOB")
@@ -430,14 +436,6 @@ extension Home {
                             .padding(.leading, 8)
                         Text("ZT")
                             .font(.system(size: 12, weight: .bold)).foregroundColor(.zt)
-                    }
-
-                    if state.loopStatusStyle == .circle {
-                        Spacer()
-                        loopView
-                            .frame(alignment: .center)
-                            .padding(.top, 16)
-                        Spacer()
                     }
 
                     Group {
@@ -587,23 +585,6 @@ extension Home {
                     .foregroundColor(colorIcon)
                     .buttonStyle(.borderless)
                     Spacer()
-//                    if state.allowManualTemp {
-//                        Button { state.showModal(for: .manualTempBasal) }
-//                        label: {
-//                            Image("bolus1")
-//                                .renderingMode(.template)
-//                                .resizable()
-//                                .frame(width: 24, height: 24)
-//                                .padding(8)
-//                        }
-//                        .foregroundColor(colorIcon)
-//                        .buttonStyle(.borderless)
-//                        Spacer()
-//                    }
-
-                    // MARK: CANCEL OF PROFILE HAS TO BE IMPLEMENTED
-
-                    // MAYBE WITH A SMALL INDICATOR AT THE SYMBOL
                     Button {
                         state.showModal(for: .overrideProfilesConfig)
                     } label: {
@@ -665,23 +646,32 @@ extension Home {
                 VStack(spacing: 0) {
                     if state.loopStatusStyle == .bar {
                         loopView.padding(.horizontal, 10)
-
                         Spacer()
                     }
 
-                    ZStack(alignment: .bottomTrailing) {
+                    ZStack(alignment: .bottom) {
                         glucoseView
+                        
+                        if state.loopStatusStyle == .circle {
+                            loopView
+                                .padding(.trailing)
+                                .offset(x: -80, y: 4)
+                        }
+                        
                         if let eventualBG = state.eventualBG {
-                            Text(
-                                "⇢ " + numberFormatter.string(
-                                    from: (
-                                        state.units == .mmolL ? eventualBG
-                                            .asMmolL : Decimal(eventualBG)
-                                    ) as NSNumber
-                                )!
-                            )
+                            HStack {
+                                Image(systemName: "arrow.right.circle")
+                                Text(
+                                    numberFormatter.string(
+                                        from: (
+                                            state.units == .mmolL ? eventualBG
+                                                .asMmolL : Decimal(eventualBG)
+                                        ) as NSNumber
+                                    )!
+                                )
+                            }
                             .font(.system(size: 12, weight: .bold)).foregroundColor(.secondary)
-                            .offset(x: 36, y: 4)
+                            .offset(x: 80, y: 4)
                         }
                     }.padding(.top, 10)
 

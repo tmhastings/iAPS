@@ -13,7 +13,7 @@ extension StatConfig {
         @Published var useFPUconversion: Bool = true
         @Published var tins: Bool = false
         @Published var historyLayout: HistoryLayout = .twoTabs
-        @Published var loopStatusStyle: LoopStatusStyle = .bar
+        @Published var loopStatusStyle: LoopStatusStyle = .circle
 
         var units: GlucoseUnits = .mmolL
 
