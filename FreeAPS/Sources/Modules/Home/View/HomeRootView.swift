@@ -55,6 +55,17 @@ extension Home {
             sortDescriptors: [NSSortDescriptor(key: "date", ascending: false)]
         ) var enactedSliderTT: FetchedResults<TempTargetsSlider>
 
+        var bolusProgressFormatter: NumberFormatter {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .decimal
+            formatter.minimum = 0
+            formatter.maximumFractionDigits = state.settingsManager.preferences.bolusIncrement > 0.05 ? 1 : 2
+            formatter.minimumFractionDigits = state.settingsManager.preferences.bolusIncrement > 0.05 ? 1 : 2
+            formatter.allowsFloats = true
+            formatter.roundingIncrement = Double(state.settingsManager.preferences.bolusIncrement) as NSNumber
+            return formatter
+        }
+
         private var numberFormatter: NumberFormatter {
             let formatter = NumberFormatter()
             formatter.numberStyle = .decimal
@@ -370,18 +381,18 @@ extension Home {
                     Text("Max IOB: 0").font(.callout).foregroundColor(.orange).padding(.trailing, 20)
                 }
 
-                if let progress = state.bolusProgress {
-                    HStack {
-                        Text("Bolusing")
-                            .font(.system(size: 12, weight: .bold)).foregroundColor(.insulin)
-                        ProgressView(value: Double(progress))
-                            .progressViewStyle(BolusProgressViewStyle())
-                            .padding(.trailing, 8)
-                    }
-                    .onTapGesture {
-                        state.cancelBolus()
-                    }
-                }
+//                if let progress = state.bolusProgress {
+//                    HStack {
+//                        Text("Bolusing")
+//                            .font(.system(size: 12, weight: .bold)).foregroundColor(.insulin)
+//                        ProgressView(value: Double(progress))
+//                            .progressViewStyle(BolusProgressViewStyle())
+//                            .padding(.trailing, 8)
+//                    }
+//                    .onTapGesture {
+//                        state.cancelBolus()
+//                    }
+//                }
             }
             .frame(maxWidth: .infinity, maxHeight: 30)
         }
@@ -621,6 +632,80 @@ extension Home {
             }
         }
 
+        @ViewBuilder func bolusProgressBar(_ progress: Decimal) -> some View {
+            GeometryReader { geo in
+                Rectangle()
+                    .frame(height: 6)
+                    .foregroundColor(.clear)
+                    .background(
+                        LinearGradient(colors: [
+                            Color(red: 0.7215686275, green: 0.3411764706, blue: 1),
+                            Color(red: 0.6235294118, green: 0.4235294118, blue: 0.9803921569),
+                            Color(red: 0.4862745098, green: 0.5450980392, blue: 0.9529411765),
+                            Color(red: 0.3411764706, green: 0.6666666667, blue: 0.9254901961),
+                            Color(red: 0.262745098, green: 0.7333333333, blue: 0.9137254902)
+                        ], startPoint: .leading, endPoint: .trailing)
+                            .mask(alignment: .leading) {
+                                Rectangle()
+                                    .frame(width: geo.size.width * CGFloat(progress))
+                            }
+                    )
+            }
+        }
+
+        @ViewBuilder func bolusProgressView(_: GeometryProxy, _ progress: Decimal) -> some View {
+            let colorRectangle: Color = colorScheme == .dark ? Color(
+                red: 0.05490196078,
+                green: 0.05490196078,
+                blue: 0.05490196078
+            ) : Color.white
+
+            let colorIcon = (colorScheme == .dark ? Color.white : Color.black).opacity(0.9)
+
+            let bolusTotal = state.boluses.last?.amount ?? 0
+            let bolusFraction = progress * bolusTotal
+            
+            let bolusString =
+                (
+                    bolusProgressFormatter
+                        .string(from: bolusFraction as NSNumber) ??
+                        "0"
+                )
+                + " of " +
+                (numberFormatter.string(from: bolusTotal as NSNumber) ?? "0")
+                + NSLocalizedString(" U", comment: "Insulin unit")
+
+            ZStack(alignment: .bottom) {
+                HStack {
+                    Button {
+                        state.cancelBolus()
+
+                    } label: {
+                        HStack(alignment: .center) {
+                            Text("Bolusing")
+                                .font(.subheadline)
+                                .fontWeight(.bold)
+                            Text(bolusString)
+                                .font(.subheadline)
+
+                            Spacer()
+
+                            Image(systemName: "xmark.app")
+                                .font(.system(size: 30))
+                                .padding(1)
+                        }
+                    }.foregroundColor(colorIcon)
+                }.padding()
+
+                bolusProgressBar(progress).offset(y: 56)
+            }
+            .background(colorRectangle)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .frame(height: 62, alignment: .center)
+            .padding(.horizontal, 10)
+            .offset(y: state.loopStatusStyle == .circle ? -90 : -76)
+        }
+
         var body: some View {
             let colorBackground = colorScheme == .dark ? LinearGradient(
                 gradient: Gradient(colors: [
@@ -651,16 +736,16 @@ extension Home {
 
                     ZStack(alignment: .bottom) {
                         glucoseView
-                        
+
                         if state.loopStatusStyle == .circle {
                             loopView
                                 .padding(.trailing)
                                 .offset(x: -80, y: 4)
                         }
-                        
-                        if let eventualBG = state.eventualBG {
-                            HStack {
-                                Image(systemName: "arrow.right.circle")
+
+                        HStack {
+                            Image(systemName: "arrow.right.circle")
+                            if let eventualBG = state.eventualBG {
                                 Text(
                                     numberFormatter.string(
                                         from: (
@@ -669,10 +754,13 @@ extension Home {
                                         ) as NSNumber
                                     )!
                                 )
+                            } else {
+                                Text("--")
                             }
-                            .font(.system(size: 12, weight: .bold)).foregroundColor(.secondary)
-                            .offset(x: 80, y: 4)
                         }
+                        .font(.system(size: 12, weight: .bold)).foregroundColor(.secondary)
+                        .offset(x: 80, y: 4)
+
                     }.padding(.top, 10)
 
                     Spacer()
@@ -707,7 +795,13 @@ extension Home {
 
                     Spacer()
 
-                    bottomPanel(geo)
+                    ZStack(alignment: .bottom) {
+                        bottomPanel(geo)
+
+                        if let progress = state.bolusProgress {
+                            bolusProgressView(geo, progress)
+                        }
+                    }
                 }
                 .background(colorBackground)
                 .edgesIgnoringSafeArea([.horizontal, .bottom])
