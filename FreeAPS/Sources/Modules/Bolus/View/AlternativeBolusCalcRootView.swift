@@ -183,19 +183,25 @@ extension Bolus {
             .blur(radius: showInfo ? 3 : 0)
             .navigationTitle("Enact Bolus")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(
-                leading: Button {
-                    carbsView()
-                }
-                label: {
-                    HStack {
-                        Image(systemName: "chevron.backward")
-                        Text("Meal")
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    if !fetch {
+                        Button("Close") {
+                            state.hideModal()
+                        }
+                    } else {
+                        Button {
+                            keepForNextWiew = true
+                            state.backToCarbsView(complexEntry: true, meal, override: false)
+                        } label: {
+                            HStack {
+                                Image(systemName: "chevron.backward")
+                                Text("Meal")
+                            }
+                        }
                     }
-                },
-                trailing: Button { state.hideModal() }
-                label: { Text("Close") }
-            )
+                }
+            }
             .scrollContentBackground(.hidden).background(color)
             .onAppear {
                 configureView {
@@ -635,15 +641,6 @@ extension Bolus {
 
         var hasFatOrProtein: Bool {
             ((meal.first?.fat ?? 0) > 0) || ((meal.first?.protein ?? 0) > 0)
-        }
-
-        func carbsView() {
-            if fetch {
-                keepForNextWiew = true
-                state.backToCarbsView(complexEntry: true, meal, override: false)
-            } else {
-                state.backToCarbsView(complexEntry: false, meal, override: true)
-            }
         }
 
         var mealEntries: some View {

@@ -105,32 +105,50 @@ extension DataTable {
             .onAppear(perform: configureView)
             .navigationTitle("History")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(trailing: Button("Close", action: state.hideModal))
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Close") {
+                        state.hideModal()
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    switch state.mode {
+                    case .treatments: addButton({ showExternalInsulin = true
+                            state.externalInsulinDate = Date() })
+                    case .meals: EmptyView()
+                    case .glucose: addButton({ showManualGlucose = true
+                            state.manualGlucose = 0 })
+                    }
+                }
+            }
             .sheet(isPresented: $showManualGlucose) {
-                addGlucoseView
+                addGlucoseView()
             }
             .sheet(isPresented: $showExternalInsulin, onDismiss: { if isAmountUnconfirmed { state.externalInsulinAmount = 0
                 state.externalInsulinDate = Date() } }) {
-                addExternalInsulinView
+                addExternalInsulinView()
             }
+        }
+
+        @ViewBuilder func addButton(_ action: @escaping () -> Void) -> some View {
+            Button(
+                action: action,
+                label: {
+                    Image(systemName: "plus.circle.fill")
+                    Text("Add")
+                }
+            )
         }
 
         private var treatmentsList: some View {
             List {
                 HStack {
-                    Button(action: { showExternalInsulin = true
-                        state.externalInsulinDate = Date() }, label: {
-                        HStack {
-                            Image(systemName: "syringe")
-                            Text("Add")
-                                .foregroundColor(Color.secondary)
-                                .font(.caption)
-                        }.frame(maxWidth: .infinity, alignment: .leading)
-                    }).buttonStyle(.borderless)
-
+                    Text("Type").foregroundStyle(.secondary)
+                    Spacer()
                     if state.historyLayout == .twoTabs {
-                        Spacer()
                         filterEntriesButton
+                    } else {
+                        Text("Time").foregroundStyle(.secondary)
                     }
                 }
                 if !state.treatments.isEmpty {
@@ -167,13 +185,7 @@ extension DataTable {
         private var glucoseList: some View {
             List {
                 HStack {
-                    Button(
-                        action: { showManualGlucose = true
-                            state.manualGlucose = 0 },
-                        label: { Image(systemName: "plus.circle.fill").foregroundStyle(.secondary)
-                        }
-                    ).buttonStyle(.borderless)
-                    Text(state.units.rawValue).foregroundStyle(.secondary)
+                    Text("Values").foregroundStyle(.secondary)
                     Spacer()
                     Text("Time").foregroundStyle(.secondary)
                 }
@@ -189,7 +201,10 @@ extension DataTable {
             }
         }
 
-        var addGlucoseView: some View {
+        @ViewBuilder private func addGlucoseView() -> some View {
+            let limitLow: Decimal = state.units == .mmolL ? 0.8 : 14
+            let limitHigh: Decimal = state.units == .mmolL ? 40 : 720
+
             NavigationView {
                 VStack {
                     Form {
@@ -220,13 +235,25 @@ extension DataTable {
                                     .frame(maxWidth: .infinity, alignment: .center)
                                     .disabled(state.manualGlucose < limitLow || state.manualGlucose > limitHigh)
                             }
+                            .listRowBackground(
+                                state.manualGlucose < limitLow || state
+                                    .manualGlucose > limitHigh ? Color(.systemGray4) : Color(.systemBlue)
+                            )
+                            .tint(.white)
                         }
                     }
                 }
+                .scrollContentBackground(.hidden).background(color)
                 .onAppear(perform: configureView)
                 .navigationTitle("Add Glucose")
                 .navigationBarTitleDisplayMode(.automatic)
-                .navigationBarItems(trailing: Button("Close", action: { showManualGlucose = false }))
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Close") {
+                            showManualGlucose = false
+                        }
+                    }
+                }
             }
         }
 
@@ -362,7 +389,33 @@ extension DataTable {
             }
         }
 
-        var addExternalInsulinView: some View {
+        @ViewBuilder func addExternalInsulinView() -> some View {
+            let amountWarningCondition = (state.externalInsulinAmount > state.maxBolus)
+
+            var buttonBackgroundColor: Color {
+                if amountWarningCondition {
+                    return Color.red
+                } else if state.externalInsulinAmount <= 0 || state.externalInsulinAmount > state
+                    .maxBolus * 3
+                {
+                    return Color(.systemGray4)
+                } else {
+                    return Color(.systemBlue)
+                }
+            }
+
+            var buttonTextColor: Color {
+                if amountWarningCondition {
+                    return Color.white
+                } else if state.externalInsulinAmount <= 0 || state.externalInsulinAmount > state
+                    .maxBolus * 3
+                {
+                    return Color.secondary
+                } else {
+                    return Color.white
+                }
+            }
+
             NavigationView {
                 VStack {
                     Form {
@@ -397,7 +450,7 @@ extension DataTable {
                                 label: {
                                     Text("Log external insulin")
                                 }
-                                .foregroundColor(amountWarningCondition ? Color.white : Color.accentColor)
+                                .foregroundStyle(buttonTextColor)
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .disabled(
                                     state.externalInsulinAmount <= 0 || state.externalInsulinAmount > state.maxBolus * 3
@@ -410,17 +463,21 @@ extension DataTable {
                                 Text("⚠️ Warning! The entered insulin amount is greater than your Max Bolus setting!")
                             }
                         }
-                        .listRowBackground(
-                            amountWarningCondition ? Color
-                                .red : colorScheme == .dark ? Color(UIColor.secondarySystemBackground) : Color.white
-                        )
+                        .listRowBackground(buttonBackgroundColor).tint(.white)
                     }
                 }
+                .scrollContentBackground(.hidden).background(color)
                 .onAppear(perform: configureView)
                 .navigationTitle("External Insulin")
                 .navigationBarTitleDisplayMode(.inline)
-                .navigationBarItems(trailing: Button("Close", action: { showExternalInsulin = false
-                    state.externalInsulinAmount = 0 }))
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Close") {
+                            showExternalInsulin = false
+                            state.externalInsulinAmount = 0
+                        }
+                    }
+                }
             }
         }
 
