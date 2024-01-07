@@ -7,8 +7,8 @@ extension IconConfig {
         var color: LinearGradient {
             colorScheme == .dark ? LinearGradient(
                 gradient: Gradient(colors: [
-                    Color("Background_DarkBlue"),
-                    Color("Background_DarkerDarkBlue")
+                    Color.bgDarkBlue,
+                    Color.bgDarkerDarkBlue
                 ]),
                 startPoint: .top,
                 endPoint: .bottom

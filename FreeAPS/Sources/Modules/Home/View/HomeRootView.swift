@@ -710,20 +710,16 @@ extension Home {
         var body: some View {
             let colorBackground = colorScheme == .dark ? LinearGradient(
                 gradient: Gradient(colors: [
-                    Color("Background_DarkBlue"),
-                    Color("Background_DarkerDarkBlue"),
-                    Color("Background_DarkBlue")
+                    Color.bgDarkBlue,
+                    Color.bgDarkerDarkBlue,
+                    Color.bgDarkBlue
                 ]),
                 startPoint: .top,
                 endPoint: .bottom
             )
                 :
                 LinearGradient(gradient: Gradient(colors: [Color.gray.opacity(0.1)]), startPoint: .top, endPoint: .bottom)
-            let colourChart: Color = colorScheme == .dark ? Color(
-                red: 0.05490196078,
-                green: 0.05490196078,
-                blue: 0.05490196078
-            ) : .white
+            let colourChart: Color = colorScheme == .dark ? Color.chart : .white
 
             GeometryReader { geo in
                 VStack(spacing: 0) {
