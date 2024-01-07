@@ -23,6 +23,24 @@ extension AddTempTarget {
             return formatter
         }
 
+        @Environment(\.colorScheme) var colorScheme
+        private var color: LinearGradient {
+            colorScheme == .dark ? LinearGradient(
+                gradient: Gradient(colors: [
+                    Color("Background_DarkBlue"),
+                    Color("Background_DarkerDarkBlue")
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+                :
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.gray.opacity(0.1)]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+        }
+
         var body: some View {
             Form {
                 if !state.presets.isEmpty {
@@ -135,6 +153,7 @@ extension AddTempTarget {
                     }
                 }
             }
+            .scrollContentBackground(.hidden).background(color)
             .onAppear {
                 configureView()
                 state.hbt = isEnabledArray.first?.hbt ?? 160

@@ -29,6 +29,24 @@ extension AddCarbs {
             return formatter
         }
 
+        @Environment(\.colorScheme) var colorScheme
+        private var color: LinearGradient {
+            colorScheme == .dark ? LinearGradient(
+                gradient: Gradient(colors: [
+                    Color("Background_DarkBlue"),
+                    Color("Background_DarkerDarkBlue")
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+                :
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.gray.opacity(0.1)]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+        }
+
         var body: some View {
             Form {
                 if let carbsReq = state.carbsRequired, state.carbs < carbsReq {
@@ -74,7 +92,6 @@ extension AddCarbs {
 
                     // Time
                     HStack {
-                        let now = Date.now
                         Text("Time")
                         Spacer()
                         if !pushed {
@@ -117,13 +134,18 @@ extension AddCarbs {
                     label: { Text((state.skipBolus && !override && !editMode) ? "Save" : "Continue") }
                         .disabled(empty)
                         .frame(maxWidth: .infinity, alignment: .center)
-                }.listRowBackground(!empty ? Color(.systemBlue) : Color(.systemGray4))
-                    .tint(.white)
+                }
+                .listRowBackground(
+                    !empty ? Color(.systemBlue) : Color(.systemGray4)
+                )
+                .tint(.white)
 
                 Section {
                     mealPresets
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(color)
             .onAppear {
                 configureView {
                     state.loadEntries(editMode)

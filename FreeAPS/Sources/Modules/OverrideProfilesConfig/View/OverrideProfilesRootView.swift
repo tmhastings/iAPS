@@ -15,6 +15,23 @@ extension OverrideProfilesConfig {
 
         @Environment(\.dismiss) var dismiss
         @Environment(\.managedObjectContext) var moc
+        @Environment(\.colorScheme) var colorScheme
+        var color: LinearGradient {
+            colorScheme == .dark ? LinearGradient(
+                gradient: Gradient(colors: [
+                    Color("Background_DarkBlue"),
+                    Color("Background_DarkerDarkBlue")
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+                :
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.gray.opacity(0.1)]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+        }
 
         @FetchRequest(
             entity: OverridePresets.entity(),
@@ -267,6 +284,7 @@ extension OverrideProfilesConfig {
                 .disabled(!state.isEnabled)
                 .tint(.red)
             }
+            .scrollContentBackground(.hidden).background(color)
             .onAppear(perform: configureView)
             .onAppear { state.savedSettings() }
             .navigationBarTitle("Profiles")
