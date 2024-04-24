@@ -12,6 +12,8 @@ extension Home {
         private let timer = DispatchTimer(timeInterval: 5)
         private(set) var filteredHours = 24
         @Published var glucose: [BloodGlucose] = []
+        @Published var isManual: [BloodGlucose] = []
+        @Published var announcement: [Announcement] = []
         @Published var suggestion: Suggestion?
         @Published var uploadStats = false
         @Published var enactedSuggestion: Suggestion?
@@ -54,14 +56,20 @@ extension Home {
         @Published var lowGlucose: Decimal = 4 / 0.0555
         @Published var highGlucose: Decimal = 10 / 0.0555
         @Published var overrideUnit: Bool = false
-        @Published var screenHours: Int = 6
         @Published var displayXgridLines: Bool = false
         @Published var displayYgridLines: Bool = false
         @Published var thresholdLines: Bool = false
+        @Published var timeZone: TimeZone?
+        @Published var hours: Int16 = 6
+        @Published var totalBolus: Decimal = 0
+        @Published var isStatusPopupPresented: Bool = false
+        @Published var tins: Bool = false
+        @Published var loopStatusStyle: LoopStatusStyle = .circle
 
         let coredataContext = CoreDataStack.shared.persistentContainer.viewContext
 
         override func subscribe() {
+            calculateTINS()
             setupGlucose()
             setupBasals()
             setupBoluses()
@@ -72,6 +80,8 @@ extension Home {
             setupCarbs()
             setupBattery()
             setupReservoir()
+            setupAnnouncements()
+            setupCurrentPumpTimezone()
 
             suggestion = provider.suggestion
             uploadStats = settingsManager.settings.uploadStats
@@ -90,10 +100,11 @@ extension Home {
             lowGlucose = settingsManager.settings.low
             highGlucose = settingsManager.settings.high
             overrideUnit = settingsManager.settings.overrideHbA1cUnit
-            screenHours = settingsManager.settings.hours
             displayXgridLines = settingsManager.settings.xGridLines
             displayYgridLines = settingsManager.settings.yGridLines
             thresholdLines = settingsManager.settings.rulerMarks
+            tins = settingsManager.settings.tins
+            loopStatusStyle = settingsManager.settings.loopStatusStyle
 
             broadcaster.register(GlucoseObserver.self, observer: self)
             broadcaster.register(SuggestionObserver.self, observer: self)
@@ -193,7 +204,7 @@ extension Home {
         }
 
         func addCarbs() {
-            showModal(for: .addCarbs)
+            showModal(for: .addCarbs(editMode: false, override: false))
         }
 
         func runLoop() {
@@ -216,6 +227,7 @@ extension Home {
         private func setupGlucose() {
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
+                self.isManual = self.provider.manualGlucose(hours: self.filteredHours)
                 self.glucose = self.provider.filteredGlucose(hours: self.filteredHours)
                 self.recentGlucose = self.glucose.last
                 if self.glucose.count >= 2 {
@@ -262,6 +274,29 @@ extension Home {
             }
         }
 
+        // MARK: WORKS....BUT MAYBE TIMEZONE PROBLEMS COULD OCCUR
+
+        func calculateTINS() -> String {
+            let date = Date()
+            let calendar = Calendar.current
+            let offset = hours
+
+            var offsetComponents = DateComponents()
+            //        offsetComponents.hour = -offset.rawValue
+            offsetComponents.hour = -Int(offset)
+
+            let startTime = calendar.date(byAdding: offsetComponents, to: date)!
+            print("******************")
+            print("die voll krasse start time ist: \(startTime)")
+
+            let bolusesForCurrentDay = boluses.filter { $0.timestamp >= startTime && $0.type == .bolus }
+
+            let totalBolus = bolusesForCurrentDay.map { $0.amount ?? 0 }.reduce(0, +)
+            let roundedTotalBolus = Decimal(round(100 * Double(totalBolus)) / 100)
+
+            return "\(roundedTotalBolus)"
+        }
+
         private func setupSuspensions() {
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
@@ -303,6 +338,13 @@ extension Home {
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.carbs = self.provider.carbs(hours: self.filteredHours)
+            }
+        }
+
+        private func setupAnnouncements() {
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.announcement = self.provider.announcement(self.filteredHours)
             }
         }
 
@@ -349,6 +391,10 @@ extension Home {
             tempTarget = provider.tempTarget()
         }
 
+        private func setupCurrentPumpTimezone() {
+            timeZone = provider.pumpTimeZone()
+        }
+
         func openCGM() {
             guard var url = nightscoutManager.cgmURL else { return }
 
@@ -386,7 +432,8 @@ extension Home.StateModel:
     CarbsObserver,
     EnactedSuggestionObserver,
     PumpBatteryObserver,
-    PumpReservoirObserver
+    PumpReservoirObserver,
+    PumpTimeZoneObserver
 {
     func glucoseDidUpdate(_: [BloodGlucose]) {
         setupGlucose()
@@ -409,10 +456,11 @@ extension Home.StateModel:
         lowGlucose = settingsManager.settings.low
         highGlucose = settingsManager.settings.high
         overrideUnit = settingsManager.settings.overrideHbA1cUnit
-        screenHours = settingsManager.settings.hours
         displayXgridLines = settingsManager.settings.xGridLines
         displayYgridLines = settingsManager.settings.yGridLines
         thresholdLines = settingsManager.settings.rulerMarks
+        tins = settingsManager.settings.tins
+        loopStatusStyle = settingsManager.settings.loopStatusStyle
 
         setupGlucose()
     }
@@ -421,6 +469,7 @@ extension Home.StateModel:
         setupBasals()
         setupBoluses()
         setupSuspensions()
+        setupAnnouncements()
     }
 
     func pumpSettingsDidChange(_: PumpSettings) {
@@ -450,6 +499,10 @@ extension Home.StateModel:
 
     func pumpReservoirDidChange(_: Decimal) {
         setupReservoir()
+    }
+
+    func pumpTimeZoneDidChange(_: TimeZone) {
+        setupCurrentPumpTimezone()
     }
 }
 

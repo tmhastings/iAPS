@@ -12,6 +12,24 @@ extension PreferencesEditor {
         let resolver: Resolver
         @StateObject var state = StateModel()
 
+        @Environment(\.colorScheme) var colorScheme
+        var color: LinearGradient {
+            colorScheme == .dark ? LinearGradient(
+                gradient: Gradient(colors: [
+                    Color.bgDarkBlue,
+                    Color.bgDarkerDarkBlue
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+                :
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.gray.opacity(0.1)]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+        }
+
         private var formatter: NumberFormatter {
             let formatter = NumberFormatter()
             formatter.numberStyle = .decimal
@@ -27,15 +45,6 @@ extension PreferencesEditor {
                         Text("mg/dL").tag(0)
                         Text("mmol/L").tag(1)
                     }
-
-                    Toggle("Remote control", isOn: $state.allowAnnouncements)
-
-                    HStack {
-                        Text("Recommended Bolus Percentage")
-                        DecimalTextField("", value: $state.insulinReqPercentage, formatter: formatter)
-                    }
-
-                    Toggle("Skip Bolus screen after carbs", isOn: $state.skipBolusScreenAfterCarbs)
                 }
 
                 ForEach(state.sections.indexed(), id: \.1.id) { sectionIndex, section in
@@ -85,6 +94,7 @@ extension PreferencesEditor {
                     }
                 }
             }
+            .scrollContentBackground(.hidden).background(color)
             .onAppear(perform: configureView)
             .navigationTitle("Preferences")
             .navigationBarTitleDisplayMode(.automatic)

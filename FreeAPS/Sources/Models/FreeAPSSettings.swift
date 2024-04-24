@@ -15,6 +15,8 @@ struct FreeAPSSettings: JSON, Equatable {
     var cgm: CGMType = .nightscout
     var uploadGlucose: Bool = true
     var useCalendar: Bool = false
+    var displayCalendarIOBandCOB: Bool = false
+    var displayCalendarEmojis: Bool = false
     var glucoseBadge: Bool = false
     var glucoseNotificationsAlways: Bool = false
     var useAlarmSound: Bool = false
@@ -24,6 +26,7 @@ struct FreeAPSSettings: JSON, Equatable {
     var carbsRequiredThreshold: Decimal = 10
     var animatedBackground: Bool = false
     var useFPUconversion: Bool = true
+    var tins: Bool = false
     var individualAdjustmentFactor: Decimal = 0.5
     var timeCap: Int = 8
     var minuteInterval: Int = 30
@@ -43,6 +46,14 @@ struct FreeAPSSettings: JSON, Equatable {
     var maxCarbs: Decimal = 1000
     var displayFatAndProteinOnWatch: Bool = false
     var onlyAutotuneBasals: Bool = false
+    var overrideFactor: Decimal = 0.8
+    var useCalc: Bool = false
+    var fattyMeals: Bool = false
+    var fattyMealFactor: Decimal = 0.7
+    var displayPredictions: Bool = true
+    var useLiveActivity: Bool = false
+    var historyLayout: HistoryLayout = .twoTabs
+    var loopStatusStyle: LoopStatusStyle = .circle
 }
 
 extension FreeAPSSettings: Decodable {
@@ -113,6 +124,14 @@ extension FreeAPSSettings: Decodable {
             settings.useCalendar = useCalendar
         }
 
+        if let displayCalendarIOBandCOB = try? container.decode(Bool.self, forKey: .displayCalendarIOBandCOB) {
+            settings.displayCalendarIOBandCOB = displayCalendarIOBandCOB
+        }
+
+        if let displayCalendarEmojis = try? container.decode(Bool.self, forKey: .displayCalendarEmojis) {
+            settings.displayCalendarEmojis = displayCalendarEmojis
+        }
+
         if let useAppleHealth = try? container.decode(Bool.self, forKey: .useAppleHealth) {
             settings.useAppleHealth = useAppleHealth
         }
@@ -125,8 +144,28 @@ extension FreeAPSSettings: Decodable {
             settings.useFPUconversion = useFPUconversion
         }
 
+        if let tins = try? container.decode(Bool.self, forKey: .tins) {
+            settings.tins = tins
+        }
+
         if let individualAdjustmentFactor = try? container.decode(Decimal.self, forKey: .individualAdjustmentFactor) {
             settings.individualAdjustmentFactor = individualAdjustmentFactor
+        }
+
+        if let useCalc = try? container.decode(Bool.self, forKey: .useCalc) {
+            settings.useCalc = useCalc
+        }
+
+        if let fattyMeals = try? container.decode(Bool.self, forKey: .fattyMeals) {
+            settings.fattyMeals = fattyMeals
+        }
+
+        if let fattyMealFactor = try? container.decode(Decimal.self, forKey: .fattyMealFactor) {
+            settings.fattyMealFactor = fattyMealFactor
+        }
+
+        if let overrideFactor = try? container.decode(Decimal.self, forKey: .overrideFactor) {
+            settings.overrideFactor = overrideFactor
         }
 
         if let timeCap = try? container.decode(Int.self, forKey: .timeCap) {
@@ -222,6 +261,22 @@ extension FreeAPSSettings: Decodable {
 
         if let onlyAutotuneBasals = try? container.decode(Bool.self, forKey: .onlyAutotuneBasals) {
             settings.onlyAutotuneBasals = onlyAutotuneBasals
+        }
+
+        if let displayPredictions = try? container.decode(Bool.self, forKey: .displayPredictions) {
+            settings.displayPredictions = displayPredictions
+        }
+
+        if let useLiveActivity = try? container.decode(Bool.self, forKey: .useLiveActivity) {
+            settings.useLiveActivity = useLiveActivity
+        }
+
+        if let historyLayout = try? container.decode(HistoryLayout.self, forKey: .historyLayout) {
+            settings.historyLayout = historyLayout
+        }
+
+        if let loopStatusStyle = try? container.decode(LoopStatusStyle.self, forKey: .loopStatusStyle) {
+            settings.loopStatusStyle = loopStatusStyle
         }
 
         self = settings
